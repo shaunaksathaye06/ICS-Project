@@ -41,7 +41,7 @@ int train_labels[TRAIN_SAMPLES];
 float test_images[TEST_SAMPLES][IMAGE_SIZE];
 int test_labels[TEST_SAMPLES];
 
-void initialize_weights() {
+void initialize_weights() {//done
     srand(time(NULL)); // Seed the random number generator for more varied initialization
     for (int i = 0; i < NUM_HIDDEN_1; i++) {
         for (int j = 0; j < IMAGE_SIZE; j++) {
@@ -63,17 +63,21 @@ void initialize_weights() {
     }
 }
 
-void relu(float *input, int size) {
+void relu(float *input, int size) {//done
     for (int i = 0; i < size; i++) {
         if (input[i] < 0) input[i] = 0;
     }
 }
 
-float relu_derivative(float x) {
+float relu_derivative(float x) {//done
     return (x > 0) ? 1.0 : 0.0;
 }
+float compute_loss(float *output, uint8_t label) {
+    float epsilon = 1e-7f; // to avoid log(0)
+    return -logf(output[label] + epsilon);
+}
 
-void softmax(float *input, int size) {
+void softmax(float *input, int size) {//done
     float max_val = input[0];
     for (int i = 1; i < size; i++) {
         if (input[i] > max_val) max_val = input[i];
@@ -88,12 +92,32 @@ void softmax(float *input, int size) {
     }
 }
 
-float get_learning_rate(int epoch) {
+float get_learning_rate(int epoch) {//done
     // More aggressive learning rate decay
     return INITIAL_LEARNING_RATE / (1.0 + 0.05 * epoch);
 }
 
-void forward(float *image, float *hidden1, float *hidden2, float *output) {
+void forward(float *image, float *hidden1, float *hidden2, float *output) {//done
+                                                                           //Input x
+                                                                            //    │
+                                                                            //    ▼
+                                                                            // [Layer 1]
+                                                                            // z1 = W1 * x + B1
+                                                                            // a1 = ReLU(z1)
+                                                                            //    │
+                                                                            //    ▼
+                                                                            // [Layer 2]
+                                                                            // z2 = W2 * a1 + B2
+                                                                            // a2 = ReLU(z2)
+                                                                            //    │
+                                                                            //    ▼
+                                                                            // [Output Layer]
+                                                                            // z3 = W3 * a2 + B3
+                                                                            // y_pred = softmax(z3)
+                                                                            //    │
+                                                                            //    ▼
+                                                                            // Loss = cross_entropy(y_true, y_pred)
+
     for (int i = 0; i < NUM_HIDDEN_1; i++) {
         hidden1[i] = B1[i];
         for (int j = 0; j < IMAGE_SIZE; j++) {
@@ -119,7 +143,7 @@ void forward(float *image, float *hidden1, float *hidden2, float *output) {
     softmax(output, NUM_CLASSES);
 }
 
-void load_mnist_data(const char *image_path, const char *label_path, float images[][IMAGE_SIZE], int *labels, int num_samples) {
+void load_mnist_data(const char *image_path, const char *label_path, float images[][IMAGE_SIZE], int *labels, int num_samples) {//done
     FILE *image_file = fopen(image_path, "rb");
     FILE *label_file = fopen(label_path, "rb");
     if (!image_file || !label_file) {
@@ -151,13 +175,21 @@ void train(float learning_rate) {
     float delta_output[NUM_CLASSES];
     float delta_hidden2[NUM_HIDDEN_2];
     float delta_hidden1[NUM_HIDDEN_1];
-
+    float total_loss = 0.0;
     for (int i = 0; i < TRAIN_SAMPLES; i++) {
         forward(train_images[i], hidden1, hidden2, output);
-
+        float loss = compute_loss(output, train_labels[i]);
+        total_loss += loss;
         // Calculate output layer delta
         for (int j = 0; j < NUM_CLASSES; j++) {
-            delta_output[j] = (j == train_labels[i] ? 1.0 : 0.0) - output[j];
+            delta_output[j] = (j == train_labels[i] ? 1.0 : 0.0) - output[j];//δ3 = y_true - y_pred
+                                                                                // δ2 = (W3ᵀ * δ3) ⊙ ReLU'(a2)
+                                                                                // δ1 = (W2ᵀ * δ2) ⊙ ReLU'(a1)
+                                                                                //W3 += η * δ3 * a2ᵀ
+                                                                                // W2 += η * δ2 * a1ᵀ
+                                                                                // W1 += η * δ1 * xᵀ
+
+
         }
 
         // Backpropagation for the third layer (output to hidden 2)
@@ -218,9 +250,10 @@ void train(float learning_rate) {
             B1[j] += learning_rate * delta_hidden1[j];
         }
     }
+    printf("Total loss:%f\n",total_loss);
 }
 
-void save_model(const char *model_path) {
+void save_model(const char *model_path) {//done
     FILE *f = fopen(model_path, "wb");
     if (!f) {
         fprintf(stderr, "Error saving model.\n");
@@ -236,7 +269,7 @@ void save_model(const char *model_path) {
     printf("Model saved to %s\n", model_path);
 }
 
-void load_model(const char *model_path) {
+void load_model(const char *model_path) {//done
     FILE *f = fopen(model_path, "rb");
     if (!f) {
         fprintf(stderr, "Error loading model.\n");
