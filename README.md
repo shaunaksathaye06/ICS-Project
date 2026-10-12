@@ -266,4 +266,3 @@ Aarussh Shrivastava
 
 Aditya Chhajed
 
-- GitHub: [shaunaksathaye06](https://github.com/shaunaksathaye06)
