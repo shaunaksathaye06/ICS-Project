@@ -260,9 +260,9 @@ This project explores:
 
 **Shaunak Sathaye**
 
-**Ridham Shah
+**Ridham Shah**
 
-Aarussh Shrivastava
+**Aarussh Shrivastava**
 
-Aditya Chhajed**
+**Aditya Chhajed**
 
